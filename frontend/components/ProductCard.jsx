@@ -5,19 +5,33 @@ import {
   HStack,
   IconButton,
   Image,
+  Modal,
+  ModalOverlay,
   Text,
   useColorModeValue,
+  useDisclosure,
   useToast,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  VStack,
+  Input,
+  ModalFooter,
+  Button,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { useProductStore } from '../src/store/Product';
+import { useState } from 'react';
 
 const ProductCard = ({ product }) => {
+  const [updatedProduct, setUpdatedProduct] = useState(product);
   const textColor = useColorModeValue('gray.600', 'gray.200');
   const bg = useColorModeValue('white', 'gray.800');
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const toast = useToast();
-  const { deleteProduct } = useProductStore();
+  const { deleteProduct, updateProduct } = useProductStore();
   const handleDeleteProduct = async (pid) => {
     const { success, message } = await deleteProduct(pid);
     if (!success) {
@@ -38,6 +52,29 @@ const ProductCard = ({ product }) => {
       });
     }
   };
+
+  const handleUpdateProduct = async (pid, updatedProduct) => {
+    const { success, message } = await updateProduct(pid, updatedProduct);
+    onClose();
+    if (!success) {
+      toast({
+        title: 'Error',
+        description: message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Product updated successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Box
       shadow='lg'
@@ -63,13 +100,73 @@ const ProductCard = ({ product }) => {
         </Text>
 
         <HStack spacing={4}>
-          <IconButton icon={<EditIcon />} colorScheme='blue' />
+          <IconButton icon={<EditIcon />} colorScheme='blue' onClick={onOpen} />
           <IconButton
             icon={<DeleteIcon />}
             colorScheme='red'
             onClick={() => handleDeleteProduct(product._id)}
           />
         </HStack>
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay>
+            <ModalContent>
+              <ModalHeader>Update Product</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <VStack spacing={4}>
+                  <Input
+                    placeholder='Enter Product Name'
+                    name='name'
+                    value={updatedProduct.name}
+                    onChange={(e) =>
+                      setUpdatedProduct({
+                        ...updatedProduct,
+                        name: e.target.value,
+                      })
+                    }
+                  ></Input>
+                  <Input
+                    placeholder='Enter Product Price'
+                    name='price'
+                    type='number'
+                    value={updatedProduct.price}
+                    onChange={(e) =>
+                      setUpdatedProduct({
+                        ...updatedProduct,
+                        price: e.target.value,
+                      })
+                    }
+                  ></Input>
+                  <Input
+                    placeholder='Enter Product Image'
+                    name='image'
+                    value={updatedProduct.image}
+                    onChange={(e) =>
+                      setUpdatedProduct({
+                        ...updatedProduct,
+                        image: e.target.value,
+                      })
+                    }
+                  ></Input>
+                </VStack>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  colorScheme='blue'
+                  mr={3}
+                  onClick={() => {
+                    handleUpdateProduct(product._id, updatedProduct);
+                  }}
+                >
+                  Update
+                </Button>
+                <Button variant='ghost' onClick={onClose}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </ModalOverlay>
+        </Modal>
       </Box>
     </Box>
   );
