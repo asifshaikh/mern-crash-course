@@ -7,7 +7,9 @@ import {
   Input,
   Button,
 } from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useProductStore } from '../src/store/Product';
 
 const CreatePage = () => {
   const [newProduct, setNewProduct] = useState({
@@ -15,8 +17,26 @@ const CreatePage = () => {
     price: '',
     image: '',
   });
-  const handleAddProduct = () => {
-    console.log(newProduct);
+  const toast = useToast();
+  const { createProduct } = useProductStore();
+  const handleAddProduct = async () => {
+    const { success, message } = await createProduct(newProduct);
+    if (!success) {
+      toast({
+        title: 'Error',
+        description: message,
+        status: 'error',
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: message,
+        status: 'success',
+        isClosable: true,
+      });
+    }
+    setNewProduct({ name: '', price: '', image: '' });
   };
   return (
     <Container maxW={'container.sm'}>
